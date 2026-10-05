@@ -117,7 +117,7 @@ CREATE TABLE mensalidade (
     FOREIGN KEY (id_forma_pagamento) REFERENCES forma_pagamento(id) ON DELETE RESTRICT
 );
 
-INSERT INTO forma_pagamento (descricao) VALUES ('Cartão de Crédito');
+INSERT INTO forma_pagamento (descricao) VALUES ('Cartão de Crédito', 'PIX', 'Dinheiro');
 
 INSERT INTO nivel_turma (descricao) VALUES ('Iniciante');
 
