@@ -1,13 +1,25 @@
-DROP TABLE IF EXISTS locacao CASCADE;
 DROP TABLE IF EXISTS mensalidade CASCADE;
 DROP TABLE IF EXISTS matricula CASCADE;
+DROP TABLE IF EXISTS locacao CASCADE;
 DROP TABLE IF EXISTS turma CASCADE;
-DROP TABLE IF EXISTS plano CASCADE;
 DROP TABLE IF EXISTS quadra CASCADE;
 DROP TABLE IF EXISTS professor CASCADE;
-DROP TABLE IF EXISTS aluno CASCADE;
+DROP TABLE IF EXISTS plano CASCADE;
 DROP TABLE IF EXISTS nivel_turma CASCADE;
 DROP TABLE IF EXISTS forma_pagamento CASCADE;
+DROP TABLE IF EXISTS aluno CASCADE;
+
+CREATE TABLE aluno (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    data_nascimento DATE,
+    sexo VARCHAR(20),
+    telefone VARCHAR(15),
+    email VARCHAR(100) UNIQUE,
+    data_cadastro DATE NOT NULL,
+    ativo BOOLEAN DEFAULT TRUE
+);
 
 CREATE TABLE forma_pagamento (
     id SERIAL PRIMARY KEY,
@@ -19,15 +31,13 @@ CREATE TABLE nivel_turma (
     descricao VARCHAR(50) NOT NULL UNIQUE
 );
 
-CREATE TABLE aluno (
+CREATE TABLE plano (
     id SERIAL PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    cpf VARCHAR(11) NOT NULL UNIQUE,
-    data_nascimento DATE,
-    sexo VARCHAR(20),
-    telefone VARCHAR(15),
-    email VARCHAR(100) UNIQUE,
-    data_cadastro DATE NOT NULL,
+    nome VARCHAR(50) NOT NULL,
+    descricao VARCHAR(200),
+    frequencia_semanal INT NOT NULL,
+    duracao_meses INT NOT NULL,
+    valor NUMERIC(10, 2) NOT NULL,
     ativo BOOLEAN DEFAULT TRUE
 );
 
@@ -51,16 +61,6 @@ CREATE TABLE quadra (
     ativa BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE plano (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(50) NOT NULL,
-    descricao VARCHAR(200),
-    frequencia_semanal INT NOT NULL,
-    duracao_meses INT NOT NULL,
-    valor NUMERIC(10, 2) NOT NULL,
-    ativo BOOLEAN DEFAULT TRUE
-);
-
 CREATE TABLE turma (
     id SERIAL PRIMARY KEY,
     id_professor INT NOT NULL,
@@ -71,35 +71,8 @@ CREATE TABLE turma (
     horario_fim TIME NOT NULL,
     vagas_maximas INT NOT NULL,
     ativa BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (id_professor) REFERENCES professor(id_professor) ON DELETE CASCADE,
-    FOREIGN KEY (id_nivel) REFERENCES nivel_turma(id_nivel) ON DELETE CASCADE
-);
-
-CREATE TABLE matricula (
-    id SERIAL PRIMARY KEY,
-    id_aluno INT NOT NULL,
-    id_turma INT NOT NULL,
-    id_plano INT NOT NULL,
-    data_matricula DATE NOT NULL,
-    data_inicio DATE NOT NULL,
-    data_termino DATE,
-    status VARCHAR(30) DEFAULT 'Ativa',
-    FOREIGN KEY (id_aluno) REFERENCES aluno(id_aluno) ON DELETE CASCADE,
-    FOREIGN KEY (id_turma) REFERENCES turma(id_turma) ON DELETE CASCADE,
-    FOREIGN KEY (id_plano) REFERENCES plano(id_plano) ON DELETE CASCADE
-);
-
-CREATE TABLE mensalidade (
-    id SERIAL PRIMARY KEY,
-    id_matricula INT NOT NULL,
-    id_forma_pagamento INT NOT NULL,
-    mes_referencia VARCHAR(7) NOT NULL,
-    data_vencimento DATE NOT NULL,
-    data_pagamento DATE,
-    valor NUMERIC(10, 2) NOT NULL,
-    status VARCHAR(30) DEFAULT 'Pendente',
-    FOREIGN KEY (id_matricula) REFERENCES matricula(id_matricula) ON DELETE CASCADE,
-    FOREIGN KEY (id_forma_pagamento) REFERENCES forma_pagamento(id_forma_pagamento) ON DELETE RESTRICT
+    FOREIGN KEY (id_professor) REFERENCES professor(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_nivel) REFERENCES nivel_turma(id) ON DELETE CASCADE
 );
 
 CREATE TABLE locacao (
@@ -112,9 +85,36 @@ CREATE TABLE locacao (
     hora_fim TIME NOT NULL,
     valor_total NUMERIC(10, 2) NOT NULL,
     status VARCHAR(30) DEFAULT 'Confirmada',
-    FOREIGN KEY (id_aluno) REFERENCES aluno(id_aluno) ON DELETE CASCADE,
-    FOREIGN KEY (id_quadra) REFERENCES quadra(id_quadra) ON DELETE CASCADE,
-    FOREIGN KEY (id_forma_pagamento) REFERENCES forma_pagamento(id_forma_pagamento) ON DELETE RESTRICT
+    FOREIGN KEY (id_aluno) REFERENCES aluno(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_quadra) REFERENCES quadra(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_forma_pagamento) REFERENCES forma_pagamento(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE matricula (
+    id SERIAL PRIMARY KEY,
+    id_aluno INT NOT NULL,
+    id_turma INT NOT NULL,
+    id_plano INT NOT NULL,
+    data_matricula DATE NOT NULL,
+    data_inicio DATE NOT NULL,
+    data_termino DATE,
+    status VARCHAR(30) DEFAULT 'Ativa',
+    FOREIGN KEY (id_aluno) REFERENCES aluno(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_turma) REFERENCES turma(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_plano) REFERENCES plano(id) ON DELETE CASCADE
+);
+
+CREATE TABLE mensalidade (
+    id SERIAL PRIMARY KEY,
+    id_matricula INT NOT NULL,
+    id_forma_pagamento INT NOT NULL,
+    mes_referencia VARCHAR(7) NOT NULL,
+    data_vencimento DATE NOT NULL,
+    data_pagamento DATE,
+    valor NUMERIC(10, 2) NOT NULL,
+    status VARCHAR(30) DEFAULT 'Pendente',
+    FOREIGN KEY (id_matricula) REFERENCES matricula(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_forma_pagamento) REFERENCES forma_pagamento(id) ON DELETE RESTRICT
 );
 
 INSERT INTO forma_pagamento (descricao) VALUES ('Cartão de Crédito');
