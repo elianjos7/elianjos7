@@ -144,3 +144,133 @@ VALUES (1, 1, '2023-01', '2023-01-15', '2023-01-10', 150.00, 'Pago');
 
 INSERT INTO locacao (id_aluno, id_quadra, id_forma_pagamento, data_locacao, hora_inicio, hora_fim, valor_total, status) 
 VALUES (1, 1, 1, '2023-02-01', '18:00', '19:00', 100.00, 'Finalizada');
+
+
+SELECT a.nome AS aluno, p.nome AS plano
+FROM aluno a
+JOIN matricula mat ON a.id = mat.id_aluno
+JOIN plano p ON mat.id_plano = p.id
+WHERE mat.status = 'Ativa';
+
+SELECT pr.nome AS professor, COUNT(DISTINCT mat.id_aluno) AS total_alunos
+FROM professor pr
+LEFT JOIN turma t ON pr.id = t.id_professor
+LEFT JOIN matricula mat ON t.id = mat.id_turma
+GROUP BY pr.id, pr.nome
+ORDER BY total_alunos DESC;
+
+SELECT DISTINCT a.id, a.nome
+FROM aluno a
+JOIN matricula m ON a.id = m.id_aluno
+WHERE NOT EXISTS (
+    SELECT 1 FROM mensalidade mes 
+    WHERE mes.id_matricula = m.id AND mes.status = 'Pago'
+);
+
+SELECT DISTINCT a.id, a.nome
+FROM aluno a
+JOIN matricula mat ON a.id = mat.id_aluno
+JOIN plano p ON mat.id_plano = p.id
+WHERE p.nome ILIKE '%Anual%'
+  AND NOT EXISTS (
+      SELECT 1 FROM locacao l WHERE l.id_aluno = a.id
+  );
+
+SELECT t.id, t.nome, COUNT(mat.id) AS total_alunos
+FROM turma t
+LEFT JOIN matricula mat ON t.id = mat.id_turma AND mat.status = 'Ativa'
+GROUP BY t.id, t.nome
+HAVING COUNT(mat.id) < 5;
+
+SELECT 
+    pr.nome AS professor, 
+    MAKE_INTERVAL(secs => AVG(EXTRACT(EPOCH FROM (t.horario_fim - t.horario_inicio)))) AS duracao_media
+FROM professor pr
+JOIN turma t ON pr.id = t.id_professor
+GROUP BY pr.id, pr.nome;
+
+SELECT p.nome AS plano, SUM(m.valor) AS faturamento_total
+FROM plano p
+JOIN matricula mat ON p.id = mat.id_plano
+JOIN mensalidade m ON mat.id = m.id_matricula
+WHERE m.status = 'Pago'
+GROUP BY p.id, p.nome;
+
+SELECT mes_referencia, SUM(valor) AS total_inadimplente
+FROM mensalidade
+WHERE status = 'Pendente' AND data_vencimento < CURRENT_DATE
+GROUP BY mes_referencia
+ORDER BY mes_referencia;
+
+SELECT a.nome, m.valor, m.data_vencimento
+FROM aluno a
+JOIN matricula mat ON a.id = mat.id_aluno
+JOIN mensalidade m ON mat.id = m.id_matricula
+WHERE m.status = 'Pendente' AND m.data_vencimento < CURRENT_DATE;
+
+SELECT q.nome AS quadra, SUM(l.valor_total) AS receita_total
+FROM quadra q
+JOIN locacao l ON q.id = l.id_quadra
+WHERE l.data_locacao >= '2024-01-01' AND l.data_locacao <= '2024-01-31'
+GROUP BY q.id, q.nome;
+
+SELECT a.id, a.nome, COUNT(mat.id) AS total_matriculas_ativas
+FROM aluno a
+JOIN matricula mat ON a.id = mat.id_aluno
+WHERE mat.status = 'Ativa'
+GROUP BY a.id, a.nome
+HAVING COUNT(mat.id) > 1;
+
+SELECT q.nome AS quadra,
+       (SELECT COUNT(*) FROM locacao l WHERE l.id_quadra = q.id) AS total_locacoes
+FROM quadra q;
+
+SELECT p.nome AS plano, COUNT(m.id) AS qtd_pendentes
+FROM plano p
+LEFT JOIN matricula mat ON p.id = mat.id_plano
+LEFT JOIN mensalidade m ON mat.id = m.id_matricula AND m.status = 'Pendente'
+GROUP BY p.id, p.nome;
+
+SELECT p.id, p.nome
+FROM professor p
+LEFT JOIN turma t ON p.id = t.id_professor
+WHERE t.id IS NULL;
+
+SELECT q.nome AS quadra, SUM(l.valor_total) AS receita_total
+FROM quadra q
+JOIN locacao l ON q.id = l.id_quadra
+GROUP BY q.id, q.nome
+HAVING SUM(l.valor_total) > 5000.00;
+
+SELECT pr.nome AS professor, SUM(mes.valor) AS receita_total
+FROM professor pr
+JOIN turma t ON pr.id = t.id_professor
+JOIN matricula mat ON t.id = mat.id_turma
+JOIN mensalidade mes ON mat.id = mes.id_matricula
+WHERE mes.status = 'Pago'
+GROUP BY pr.id, pr.nome;
+
+SELECT pr.nome AS professor, SUM(mes.valor) AS receita_total
+FROM professor pr
+JOIN turma t ON pr.id = t.id_professor
+JOIN matricula mat ON t.id = mat.id_turma
+JOIN mensalidade mes ON mat.id = mes.id_matricula
+WHERE mes.status = 'Pago'
+GROUP BY pr.id, pr.nome;
+
+SELECT AVG(valor) AS ticket_medio
+FROM mensalidade
+WHERE status = 'Pago' 
+  AND data_pagamento >= CURRENT_DATE - INTERVAL '3 months';
+
+SELECT t.id, t.nome, t.vagas_maximas, COUNT(mat.id) AS total_alunos
+FROM turma t
+JOIN matricula mat ON t.id = mat.id_turma
+WHERE mat.status = 'Ativa'
+GROUP BY t.id, t.nome, t.vagas_maximas
+HAVING COUNT(mat.id) >= 12
+
+SELECT a.nome AS aluno, MAX(l.data_locacao) AS ultima_locacao
+FROM aluno a
+LEFT JOIN locacao l ON a.id = l.id_aluno
+GROUP BY a.id, a.nome;
